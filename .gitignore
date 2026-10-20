@@ -1,8 +1,18 @@
+# Build output and local build tools
 **/bin/
 **/obj/
-.vs/
 artifacts/
 .build-home/
-build-diagnostic.log
+
+# IDE and user-specific files
+.vs/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
+
+# Local diagnostics and OS metadata
+*.log
+Thumbs.db
+Desktop.ini
+.DS_Store
