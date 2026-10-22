@@ -30,6 +30,32 @@ public sealed partial class MainWindow : Window
     private async void Connect_Click(object sender, RoutedEventArgs e) => await model.ConnectAsync();
     private async void ApplyDpi_Click(object sender, RoutedEventArgs e) => await model.ApplyDpiAsync();
     private async void ApplyRate_Click(object sender, RoutedEventArgs e) => await model.ApplyRateAsync();
+    private async void ApplySensors_Click(object sender, RoutedEventArgs e) => await model.ApplySensorsAsync();
+    private async void ApplyDiy_Click(object sender, RoutedEventArgs e) => await model.ApplyDiyAsync();
+    private void DpiSection_Click(object sender, RoutedEventArgs e)
+    {
+        ShowDashboard();
+        DispatcherQueue.TryEnqueue(() => DpiCard.StartBringIntoView());
+    }
+
+    private void SensorSection_Click(object sender, RoutedEventArgs e)
+    {
+        ShowDashboard();
+        DispatcherQueue.TryEnqueue(() => SensorCard.StartBringIntoView());
+    }
+
+    private void DiySection_Click(object sender, RoutedEventArgs e)
+    {
+        DashboardPage.Visibility = Visibility.Collapsed;
+        DiyPage.Visibility = Visibility.Visible;
+        DiyPage.ChangeView(null, 0, null);
+    }
+
+    private void ShowDashboard()
+    {
+        DiyPage.Visibility = Visibility.Collapsed;
+        DashboardPage.Visibility = Visibility.Visible;
+    }
     private void ClearLog_Click(object sender, RoutedEventArgs e) => model.ClearLog();
     private async void OpenFolder_Click(object sender, RoutedEventArgs e)
     {

@@ -6,7 +6,7 @@ using Rapoo.Hid;
 
 namespace Rapoo.App.ViewModels;
 
-public sealed class MainViewModel : ObservableObject, IAsyncDisposable
+public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 {
     private readonly DispatcherQueue dispatcher;
     private readonly RapooMouseService mouse = new();
@@ -33,7 +33,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         Rates = RapooProtocol.PollingRates(codes);
         foreach (var stage in Stages) stage.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is not (nameof(DpiStageViewModel.Dpi) or nameof(DpiStageViewModel.Enabled))) return;
+            if (e.PropertyName is not (nameof(DpiStageViewModel.Dpi) or nameof(DpiStageViewModel.DpiY) or nameof(DpiStageViewModel.Enabled))) return;
             if (loadingDeviceConfiguration) return;
             UpdateCurrentDpiStage();
             DpiStatus = "有待应用的更改";
@@ -47,6 +47,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             ClearBattery(); Connected = false;
             Show("设备连接中断，请重新连接后应用设置。", InfoBarSeverity.Warning);
         });
+        InitializeAdvanced();
     }
 
     public ObservableCollection<DpiStageViewModel> Stages { get; }
@@ -113,11 +114,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             var configuration = await mouse.ReadDeviceConfigurationAsync();
             if (closing || !Connected) return;
             LoadDeviceConfiguration(configuration);
+            await LoadAdvancedAsync();
+            if (closing || !Connected) return;
             RateStatus = currentPollingRate is int readRate ? $"设备读回 {readRate:N0} Hz" : "当前回报率读取失败，可重新连接重试";
             DpiStatus = configuration is null ? "设备配置读取失败" : "已读取鼠标 DPI 档位配置";
             Show(configuration is null ? "已连接，但配置读取失败，请重新连接重试。" :
                 "已读取鼠标实际配置。修改后点击应用才写入设备；电量与当前 DPI 来自鼠标报告。",
-                configuration is null ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
+                configuration is null || !sensorLoaded || !diyLoaded ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
+            if (configuration is not null && (!sensorLoaded || !diyLoaded))
+                Show("已连接，部分设置读取失败；对应编辑区已禁用，请唤醒鼠标后重新连接。", InfoBarSeverity.Warning);
         }
         catch (Exception ex) { if (!closing) { Show(ex.Message, InfoBarSeverity.Warning); AddLog(ex.ToString()); } }
         finally { Busy = false; }
@@ -134,8 +139,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             var configuration = await mouse.ReadDeviceConfigurationAsync();
             if (closing || !Connected) return;
             LoadDeviceConfiguration(configuration);
-            DpiStatus = configuration is null ? "已发送，但设备配置读回失败，请重新连接" : $"{DateTime.Now:HH:mm:ss} 已读回鼠标配置";
-            Show(DpiStatus, configuration is null ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
+            var expected = stages.Where(s => s.Enabled).Concat(stages.Where(s => !s.Enabled)).ToArray();
+            var confirmed = configuration is not null && configuration.Stages.Select((s, i) =>
+                s.Dpi == expected[i].Dpi && s.EffectiveYDpi == expected[i].EffectiveYDpi && s.Enabled == expected[i].Enabled).All(v => v);
+            DpiStatus = configuration is null ? "已发送，但设备配置读回失败，请重新连接" : confirmed ?
+                $"{DateTime.Now:HH:mm:ss} X/Y DPI 已读回确认" : "设备读回与请求不同，已显示实际配置，请检查后重试";
+            Show(DpiStatus, confirmed ? InfoBarSeverity.Success : InfoBarSeverity.Warning);
         }
         catch (Exception ex) { DpiStatus = "发送未完成，请重新应用"; Show(ex.Message, InfoBarSeverity.Error); }
         finally { Busy = false; }
@@ -177,10 +186,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         try
         {
             hasDeviceConfiguration = configuration is not null;
+            independentDpi = configuration?.Stages.Any(s => s.Dpi != s.EffectiveYDpi) == true;
+            Notify(nameof(IndependentDpi));
             for (var i = 0; i < Stages.Count; i++)
             {
+                Stages[i].Independent = true;
                 Stages[i].Dpi = configuration?.Stages[i].Dpi ?? double.NaN;
+                Stages[i].DpiY = configuration?.Stages[i].EffectiveYDpi ?? double.NaN;
                 Stages[i].Enabled = configuration?.Stages[i].Enabled ?? false;
+                Stages[i].Independent = independentDpi;
             }
             SetCurrentPollingRate(configuration?.PollingRate);
         }
@@ -204,6 +218,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private void ClearBattery()
     {
+        ClearAdvanced();
         LoadDeviceConfiguration(null);
         battery = null;
         NotifyBatteryState();
@@ -236,6 +251,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private DpiStage[] Snapshot() => Stages.Select(s => s.Snapshot()).ToArray();
     private void Refresh()
     {
+        RefreshAdvanced();
         foreach (var property in new[] { nameof(CanConnect), nameof(CanEdit), nameof(CanApplyDpi), nameof(CanApplyRate),
             nameof(ConnectionText), nameof(ConnectionDetail), nameof(ConnectLabel), nameof(EnabledCount), nameof(DpiHint), nameof(RateHint),
             nameof(PollingRateDetail) }) Notify(property);

@@ -59,7 +59,15 @@ if ($LASTEXITCODE -eq 0) {
 dotnet run --project .\tests\Rapoo.Core.Checks\Rapoo.Core.Checks.csproj --no-build --no-restore -- --device
 ```
 
-`--device` 会连接接收器，执行一次完整配置读取并打印回报率、七档 DPI 和启用状态，**不修改设备设置**。该模式单独运行实机读取，不同时执行前述离线检查。
+`--device` 会连接接收器，读取并打印回报率、七档 X/Y DPI、启用状态、传感器参数和底部 DIY 动作，**不修改设备设置**。该模式单独运行实机读取，不同时执行前述离线检查。请保持实体鼠标唤醒。
+
+可选的实机写入验证会先读取当前配置，再原值重写传感器参数、DIY 和 X/Y DPI，提交后比较读回值，不使用默认配置。需明确添加 `--verify-writes`：
+
+```powershell
+dotnet run --project .\tests\Rapoo.Core.Checks\Rapoo.Core.Checks.csproj --no-build --no-restore -- --device --verify-writes
+```
+
+未知 DIY 动作会拒绝重写。此验证不测试其他物理键、组合键或宏。
 
 ## 发布目录
 
