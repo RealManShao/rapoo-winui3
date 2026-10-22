@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 namespace Rapoo.Core;
 
 /// <summary>Exact 32-byte Output Reports reconstructed from the repository's USBPcap captures.</summary>
-public static class RapooProtocol
+public static partial class RapooProtocol
 {
     public const ushort VendorId = 0x24AE;
     public const ushort ProductId = 0x1234;
@@ -36,7 +36,7 @@ public static class RapooProtocol
         if (stages.Count != StageCount) throw new ArgumentException("必须配置 7 个 DPI 档位。");
         if (!stages.Any(s => s.Enabled)) throw new ArgumentException("至少启用一个 DPI 档位。");
         for (var i = 0; i < stages.Count; i++)
-            if (stages[i].Dpi < MinDpi || stages[i].Dpi > MaxDpi || stages[i].Dpi % DpiStep != 0)
+            if (!ValidDpi(stages[i].Dpi) || !ValidDpi(stages[i].EffectiveYDpi))
                 throw new ArgumentException($"档位 {i + 1} 的 DPI 必须为 50–45000 之间的 50 的倍数。");
     }
 
@@ -51,6 +51,8 @@ public static class RapooProtocol
         first[22] = (byte)(stages.Count(s => s.Enabled) - 1);
         var second = (byte[])first.Clone();
         second[4] = 0xC8;
+        for (var i = 0; i < StageCount; i++)
+            BinaryPrimitives.WriteUInt16LittleEndian(second.AsSpan(8 + i * 2), (ushort)ordered[i].EffectiveYDpi);
         return [Header(0xA4, 0x18, 0x98), first, second, Header(0xA4, 0x18, 0x98), Commit()];
     }
 

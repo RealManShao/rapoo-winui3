@@ -1,6 +1,9 @@
 namespace Rapoo.Core;
 
-public sealed record DpiStage(int Dpi, bool Enabled);
+public sealed record DpiStage(int Dpi, bool Enabled, int? YDpi = null)
+{
+    public int EffectiveYDpi => YDpi ?? Dpi;
+}
 
 public sealed record MouseConfiguration(DpiStage[] Stages, int PollingRate);
 

@@ -13,6 +13,29 @@ if (args.Contains("--device"))
     if (configuration is null) throw new InvalidOperationException("Device configuration read failed; see diagnostic response above.");
     Console.WriteLine($"Device configured polling rate: {configuration.PollingRate} Hz (queried once; no settings written).");
     Console.WriteLine("Device DPI stages: " + string.Join(", ", configuration.Stages.Select(s => $"{s.Dpi}:{s.Enabled}")));
+    Console.WriteLine("Device Y DPI stages: " + string.Join(", ", configuration.Stages.Select(s => s.EffectiveYDpi)));
+    var sensors = await mouse.ReadSensorConfigurationAsync();
+    if (sensors is null) throw new InvalidOperationException("Sensor read failed.");
+    Console.WriteLine($"Sensors: {sensors.Settings}");
+    var diy = await mouse.ReadDiyActionAsync();
+    if (diy is null) throw new InvalidOperationException("DIY read failed.");
+    Console.WriteLine($"DIY: {Convert.ToHexString(diy)} ({RapooProtocol.DecodeDiyAction(diy)?.ToString() ?? "other"})");
+    if (args.Contains("--verify-writes"))
+    {
+        // Reapply only values just read, then compare. Never substitute default configuration.
+        var actualSensors = await mouse.SetSensorSettingsAsync(sensors.Settings);
+        if (actualSensors.Settings != sensors.Settings) throw new InvalidOperationException("Sensor write/readback mismatch.");
+        Console.WriteLine("PASS: unchanged sensor settings written, committed and read back.");
+        var action = RapooProtocol.DecodeDiyAction(diy) ?? throw new InvalidOperationException("Refusing to rewrite an unknown DIY action.");
+        var actualDiy = await mouse.SetDiyActionAsync(action);
+        if (!actualDiy.SequenceEqual(diy)) throw new InvalidOperationException("DIY write/readback mismatch.");
+        Console.WriteLine("PASS: unchanged DIY action written, committed and read back.");
+        await mouse.SetDpiAsync(configuration.Stages);
+        var actualDpi = await mouse.ReadDeviceConfigurationAsync();
+        if (actualDpi is null || actualDpi.PollingRate != configuration.PollingRate || !actualDpi.Stages.SequenceEqual(configuration.Stages))
+            throw new InvalidOperationException("DPI write/readback mismatch.");
+        Console.WriteLine("PASS: unchanged X/Y DPI written, committed and read back; polling rate preserved.");
+    }
     return;
 }
 
@@ -89,3 +112,60 @@ Check(!RapooProtocol.TryParseDeviceConfigurationResponse(fullResponse, out _), "
 Check(!RapooProtocol.TryParseDeviceConfigurationResponse(fullResponse.AsSpan(0, 8), out _),
     "A short rate response must not be accepted as a complete DPI configuration.");
 Console.WriteLine("PASS: bounded logs, concurrency, telemetry parsing, all seven polling rates, HID framing and invalid responses.");
+
+Check(RapooProtocol.TryDecodeSensors(Convert.FromHexString("02000100"), Convert.FromHexString("02020503"),
+    Convert.FromHexString("00000100"), out var originalSensors), "Captured sensor blocks must decode.");
+var originalSettings = originalSensors!.Settings;
+Check(originalSettings == new SensorSettings(false, false, false, false, 2, 2, 2, 5, 0), "Decode captured baseline.");
+var pressChange = RapooProtocol.CreateSensorTransaction(originalSensors, originalSettings with { PressDebounceMs = 4 });
+Check(Convert.ToHexString(pressChange[0]) == "BAA5A504C0080000040205030000000000000000000000000000000000000000",
+    "Press debounce must match round 2 frame 39 and preserve release/sleep/correction.");
+var releaseChange = RapooProtocol.CreateSensorTransaction(originalSensors, originalSettings with { ReleaseDebounceMs = 8 });
+Check(Convert.ToHexString(releaseChange[0].AsSpan(8, 4)) == "02080503", "Independent release debounce, frame 107.");
+var sleepChange = RapooProtocol.CreateSensorTransaction(originalSensors, originalSettings with { SleepMinutes = 6 });
+Check(Convert.ToHexString(sleepChange[0].AsSpan(8, 4)) == "02020603", "Sleep minute encoding, frame 175.");
+var negativeAngle = RapooProtocol.CreateSensorTransaction(originalSensors, originalSettings with { Angle = -1 });
+Check(Convert.ToHexString(negativeAngle[2].AsSpan(8, 4)) == "FF000100", "Negative angle, frame 329.");
+var glassOn = RapooProtocol.CreateSensorTransaction(originalSensors, originalSettings with { GlassTracking = true });
+Check(Convert.ToHexString(glassOn[2].AsSpan(8, 4)) == "00010100", "Glass tracking, round 1 frame 1967.");
+foreach (var (lod, expected) in new[] { (1, "01000100"), (2, "02000100"), (3, "03000100") })
+    Check(Convert.ToHexString(RapooProtocol.CreateSensorTransaction(originalSensors, originalSettings with { LodCode = lod })[4].AsSpan(8, 4)) == expected,
+        "LOD must use one-generation codes for 0.7/1/2 mm.");
+var reserved = new SensorConfiguration(originalSettings, [2, 0, 0xA1, 0xB2], [2, 2, 5, 0xF3], [0, 0, 0xC3, 0xD4]);
+var combined = RapooProtocol.CreateSensorTransaction(reserved, originalSettings with { LinearCorrection = true, RippleCorrection = true, MotionSync = true });
+Check(Convert.ToHexString(combined[0].AsSpan(8, 4)) == "020205F0" &&
+    Convert.ToHexString(combined[2].AsSpan(8, 4)) == "0000C3D4" &&
+    Convert.ToHexString(combined[4].AsSpan(8, 4)) == "0201A1B2", "Preserve every reserved byte and upper correction bits.");
+var copy = reserved.Block84; copy[2] = 0;
+Check(reserved.Block84[2] == 0xA1, "Original register snapshots must not alias caller buffers.");
+foreach (var invalidSettings in new[] { originalSettings with { LodCode = 4 }, originalSettings with { PressDebounceMs = 3 },
+    originalSettings with { ReleaseDebounceMs = 0 }, originalSettings with { SleepMinutes = 4 }, originalSettings with { Angle = -31 } })
+{
+    var rejected = false;
+    try { RapooProtocol.CreateSensorTransaction(originalSensors, invalidSettings); } catch (ArgumentException) { rejected = true; }
+    Check(rejected, "Invalid sensor settings must never create a write transaction.");
+}
+foreach (var invalidResponse in new[] { "0100", "0200", "01000000FFFF", "0000000002000100" })
+    Check(!RapooProtocol.TryParseRegisterResponse(Convert.FromHexString(invalidResponse), 4, out _), "Reject ACKs and malformed read responses.");
+Check(RapooProtocol.TryParseRegisterResponse(Convert.FromHexString("BA0100000002000100000000"), 4, out var parsedBlock) &&
+    Convert.ToHexString(parsedBlock) == "02000100", "Allow HID ID and padding in an explicit register read.");
+var xyStages = new[] { new DpiStage(400, true, 450), new(800, false, 850), new(1600, true, 1650),
+    new(1200, false, 1250), new(3200, false, 3250), new(6400, false, 6450), new(45000, false, 44950) };
+var xy = RapooProtocol.CreateDpiTransaction(xyStages);
+Check(Convert.ToHexString(xy[1].AsSpan(8, 4)) == "90014006" && Convert.ToHexString(xy[2].AsSpan(8, 4)) == "C2017206" &&
+    xy[1][22] == 1 && xy[2][22] == 1, "Keep X/Y paired when packing enabled stages first.");
+var yResponse = Convert.FromHexString("01000000C20120034006B004800C0019C8AF0200");
+Check(RapooProtocol.TryParseDpiYResponse(yResponse, out var yParsed) && yParsed[0].Dpi == 450 && yParsed.Count(s => s.Enabled) == 3,
+    "Decode seven Y stages including enable count.");
+yResponse[4] = 0;
+Check(!RapooProtocol.TryParseDpiYResponse(yResponse, out _), "Reject invalid Y DPI instead of guessing linked values.");
+foreach (var (action, expected) in new[] { (DiyAction.Disabled, "07000000"), (DiyAction.MiddleClick, "03000400"),
+    (DiyAction.KeyboardA, "00000400"), (DiyAction.CyclePollingRate, "0A000000") })
+{
+    var transaction = RapooProtocol.CreateDiyTransaction(action);
+    Check(Convert.ToHexString(transaction[0].AsSpan(8, 4)) == expected && transaction[0][4] == 0x34 && transaction[0][5] == 6,
+        "DIY writes must match the verified physical button and action encoding.");
+    Check(RapooProtocol.DecodeDiyAction(Convert.FromHexString(expected)) == action, "Readback action match.");
+}
+Check(RapooProtocol.DecodeDiyAction(Convert.FromHexString("FFFFFFFF")) is null, "Unknown mappings must remain unknown.");
+Console.WriteLine("PASS: captured sensor encodings, reserved fields, independent X/Y packing, invalid inputs and verified DIY actions.");

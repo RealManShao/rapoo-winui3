@@ -7,7 +7,7 @@ using static Rapoo.Hid.NativeMethods;
 namespace Rapoo.Hid;
 
 /// <summary>Serializes native control transfers; listens only to vendor telemetry, never mouse movement.</summary>
-public sealed class RapooMouseService : IAsyncDisposable
+public sealed partial class RapooMouseService : IAsyncDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     private SafeFileHandle? control;
@@ -73,8 +73,7 @@ public sealed class RapooMouseService : IAsyncDisposable
 
     public async Task<MouseConfiguration?> ReadDeviceConfigurationAsync(CancellationToken token = default)
     {
-        var response = await ReadConfigurationResponseAsync(true, token);
-        return response is not null && RapooProtocol.TryParseDeviceConfigurationResponse(response, out var configuration) ? configuration : null;
+        return await ReadFullConfigurationAsync(token);
     }
 
     private async Task<byte[]?> ReadConfigurationResponseAsync(bool includeDpi, CancellationToken token)

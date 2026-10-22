@@ -1,0 +1,233 @@
+[
+  {
+    "Frame": 31,
+    "Time": "26.598588000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0888",
+    "Length": 16,
+    "Data": "900120034006B004800C0019C8AF0200",
+    "Hex": "BAA5A51088080000900120034006B004800C0019C8AF02000000000000000000"
+  },
+  {
+    "Frame": 35,
+    "Time": "26.699915000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "08C8",
+    "Length": 16,
+    "Data": "C20120034006B004800C0019C8AF0200",
+    "Hex": "BAA5A510C8080000C20120034006B004800C0019C8AF02000000000000000000"
+  },
+  {
+    "Frame": 57,
+    "Time": "39.268964000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0888",
+    "Length": 16,
+    "Data": "900120034006B004800C0019C8AF0200",
+    "Hex": "BAA5A51088080000900120034006B004800C0019C8AF02000000000000000000"
+  },
+  {
+    "Frame": 61,
+    "Time": "39.370592000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "08C8",
+    "Length": 16,
+    "Data": "900120034006B004800C0019C8AF0200",
+    "Hex": "BAA5A510C8080000900120034006B004800C0019C8AF02000000000000000000"
+  },
+  {
+    "Frame": 85,
+    "Time": "50.760148000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0888",
+    "Length": 16,
+    "Data": "900120034006B004800C0019C8AF0200",
+    "Hex": "BAA5A51088080000900120034006B004800C0019C8AF02000000000000000000"
+  },
+  {
+    "Frame": 89,
+    "Time": "50.861390000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "08C8",
+    "Length": 16,
+    "Data": "900120034006B004800C0019C8AF0200",
+    "Hex": "BAA5A510C8080000900120034006B004800C0019C8AF02000000000000000000"
+  },
+  {
+    "Frame": 99,
+    "Time": "107.626717000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0634",
+    "Length": 4,
+    "Data": "0A000000",
+    "Hex": "BAA5A504340600000A0000000000000000000000000000000000000000000000"
+  },
+  {
+    "Frame": 107,
+    "Time": "107.929542000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0634",
+    "Length": 4,
+    "Data": "0A000000",
+    "Hex": "BAA5A504340600000A0000000000000000000000000000000000000000000000"
+  },
+  {
+    "Frame": 139,
+    "Time": "131.385387000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0634",
+    "Length": 4,
+    "Data": "00000400",
+    "Hex": "BAA5A50434060000000004000000000000000000000000000000000000000000"
+  },
+  {
+    "Frame": 169,
+    "Time": "155.330462000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0634",
+    "Length": 4,
+    "Data": "0A000000",
+    "Hex": "BAA5A504340600000A0000000000000000000000000000000000000000000000"
+  },
+  {
+    "Frame": 177,
+    "Time": "155.634557000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0634",
+    "Length": 4,
+    "Data": "0A000000",
+    "Hex": "BAA5A504340600000A0000000000000000000000000000000000000000000000"
+  },
+  {
+    "Frame": 209,
+    "Time": "167.703973000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Write",
+    "Register": "0634",
+    "Length": 4,
+    "Data": "07000000",
+    "Hex": "BAA5A50434060000070000000000000000000000000000000000000000000000"
+  },
+  {
+    "Frame": 218,
+    "Time": "167.907763000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "017D000000"
+  },
+  {
+    "Frame": 222,
+    "Time": "168.010240000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "01000000030001000300040003000200080003000700000003001000"
+  },
+  {
+    "Frame": 226,
+    "Time": "168.111307000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "0200"
+  },
+  {
+    "Frame": 228,
+    "Time": "168.161822000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "01000000030008000700080007000800FFFFFFFFFFFFFFFFFFFFFFFF"
+  },
+  {
+    "Frame": 232,
+    "Time": "168.262550000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "01000000FFFFFFFF0700000003000101FFFFFFFFFFFFFFFFFFFFFFFF"
+  },
+  {
+    "Frame": 236,
+    "Time": "168.363668000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "0200"
+  },
+  {
+    "Frame": 238,
+    "Time": "168.414221000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "0200"
+  },
+  {
+    "Frame": 240,
+    "Time": "168.465387000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "0200"
+  },
+  {
+    "Frame": 244,
+    "Time": "168.666711000",
+    "Bus": 1,
+    "Device": 10,
+    "Kind": "Response",
+    "Register": null,
+    "Length": null,
+    "Data": null,
+    "Hex": "01000000500000000700000000010203040506070001000100000000"
+  }
+]
