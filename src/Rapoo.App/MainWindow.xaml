@@ -48,16 +48,11 @@
                                     Glyph="&#xE713;" />
                                 <TextBlock FontWeight="SemiBold" Text="性能设置" />
                             </StackPanel>
-                            <StackPanel Spacing="6">
-                                <Button Content="DPI 与回报率" HorizontalAlignment="Stretch" Click="DpiSection_Click" />
-                                <Button Content="传感器与响应" HorizontalAlignment="Stretch" Click="SensorSection_Click" />
-                            </StackPanel>
                         </StackPanel>
 
                     </Border>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Spacing="10">
-                    <TextBlock Style="{StaticResource Caption}" Text="WinUI 3 / C# · v1.0" />
                     <Button
                         HorizontalAlignment="Stretch"
                         Click="OpenFolder_Click"
@@ -167,10 +162,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Spacing="6">
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="DPI" />
-                                <TextBlock Style="{StaticResource Caption}" Text="{Binding DpiHint}" />
-                            </StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="DPI" />
                             <Border
                                 Grid.Column="1"
                                 Padding="10,6"
@@ -181,11 +173,10 @@
                             </Border>
                         </Grid>
                         <ToggleSwitch
-                            Header="分别编辑 X / Y DPI"
                             IsEnabled="{Binding CanEdit}"
                             IsOn="{Binding IndependentDpi, Mode=TwoWay}"
-                            OffContent="两个方向使用相同 DPI"
-                            OnContent="分别设置两个方向" />
+                            OffContent="独立 X / Y DPI"
+                            OnContent="独立 X / Y DPI" />
                         <ItemsControl IsEnabled="{Binding CanEdit}" ItemsSource="{Binding Stages}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:DpiStageViewModel">
@@ -341,24 +332,31 @@
                                         IsOn="{Binding Sensor.GlassTracking, Mode=TwoWay}"
                                         OffContent="关闭"
                                         OnContent="开启" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="18">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox
+                                            HorizontalAlignment="Stretch"
+                                            Header="按下去抖（毫秒）"
+                                            ItemsSource="{Binding DebounceOptions}"
+                                            SelectedItem="{Binding Sensor.PressMs, Mode=TwoWay}" />
+                                        <ComboBox
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Stretch"
+                                            Header="抬起去抖（毫秒）"
+                                            ItemsSource="{Binding DebounceOptions}"
+                                            SelectedItem="{Binding Sensor.ReleaseMs, Mode=TwoWay}" />
+                                    </Grid>
                                     <ComboBox
                                         HorizontalAlignment="Stretch"
                                         DisplayMemberPath="Label"
                                         Header="抬升高度（LOD）"
                                         ItemsSource="{Binding LodOptions}"
                                         SelectedItem="{Binding Sensor.Lod, Mode=TwoWay}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Spacing="18">
-                                    <ComboBox
-                                        HorizontalAlignment="Stretch"
-                                        Header="按下去抖（毫秒）"
-                                        ItemsSource="{Binding DebounceOptions}"
-                                        SelectedItem="{Binding Sensor.PressMs, Mode=TwoWay}" />
-                                    <ComboBox
-                                        HorizontalAlignment="Stretch"
-                                        Header="抬起去抖（毫秒）"
-                                        ItemsSource="{Binding DebounceOptions}"
-                                        SelectedItem="{Binding Sensor.ReleaseMs, Mode=TwoWay}" />
                                     <NumberBox
                                         Header="休眠等待（分钟）"
                                         Maximum="120"
@@ -373,10 +371,6 @@
                                         SmallChange="1"
                                         SpinButtonPlacementMode="Compact"
                                         Value="{Binding Sensor.Angle, Mode=TwoWay}" />
-                                    <TextBlock
-                                        Style="{StaticResource Caption}"
-                                        Text="去抖分别控制按下与抬起。玻璃追踪用于玻璃表面，其他表面可关闭。"
-                                        TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                         </ContentControl>
