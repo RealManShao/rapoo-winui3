@@ -8,6 +8,7 @@ public sealed partial class MainViewModel
     private bool independentDpi, sensorLoaded;
     private SensorEditorViewModel sensor = new();
     private string sensorStatus = "尚未读取";
+    private string? sensorValidationError;
     public IReadOnlyList<int> DebounceOptions => RapooProtocol.DebounceOptions;
     public IReadOnlyList<LodOption> LodOptions => RapooProtocol.LodOptions;
     public SensorEditorViewModel Sensor { get => sensor; private set => Set(ref sensor, value); }
@@ -28,14 +29,10 @@ public sealed partial class MainViewModel
         get
         {
             if (!sensorLoaded) return "连接并读取参数后可编辑。";
-            try { Sensor.Snapshot(); return "修改后点击应用参数，等待设备读回确认。"; }
-            catch (Exception ex) when (ex is ArgumentException or OverflowException) { return ex.Message; }
+            return sensorValidationError ?? "修改后点击应用参数，等待设备读回确认。";
         }
     }
-    public bool CanApplySensors
-    {
-        get { if (!CanEditSensors) return false; try { Sensor.Snapshot(); return true; } catch (Exception ex) when (ex is ArgumentException or OverflowException) { return false; } }
-    }
+    public bool CanApplySensors => CanEditSensors && sensorValidationError is null;
     public string SensorStatus { get => sensorStatus; private set => Set(ref sensorStatus, value); }
 
     private void InitializeAdvanced() => TrackSensorChanges();
@@ -69,6 +66,12 @@ public sealed partial class MainViewModel
 
     private void RefreshAdvanced()
     {
+        sensorValidationError = null;
+        if (sensorLoaded)
+        {
+            try { Sensor.Snapshot(); }
+            catch (Exception ex) when (ex is ArgumentException or OverflowException) { sensorValidationError = ex.Message; }
+        }
         foreach (var name in new[] { nameof(CanEditSensors), nameof(CanApplySensors), nameof(SensorHint) }) Notify(name);
     }
 

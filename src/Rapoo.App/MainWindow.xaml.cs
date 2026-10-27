@@ -31,16 +31,6 @@ public sealed partial class MainWindow : Window
     private async void ApplyDpi_Click(object sender, RoutedEventArgs e) => await model.ApplyDpiAsync();
     private async void ApplyRate_Click(object sender, RoutedEventArgs e) => await model.ApplyRateAsync();
     private async void ApplySensors_Click(object sender, RoutedEventArgs e) => await model.ApplySensorsAsync();
-    private void DpiSection_Click(object sender, RoutedEventArgs e)
-    {
-        DispatcherQueue.TryEnqueue(() => DpiCard.StartBringIntoView());
-    }
-
-    private void SensorSection_Click(object sender, RoutedEventArgs e)
-    {
-        DispatcherQueue.TryEnqueue(() => SensorCard.StartBringIntoView());
-    }
-
     private void ClearLog_Click(object sender, RoutedEventArgs e) => model.ClearLog();
     private async void OpenFolder_Click(object sender, RoutedEventArgs e)
     {

@@ -155,7 +155,7 @@
                         </StackPanel>
                     </Border>
                 </Grid>
-                <Border x:Name="DpiCard" Style="{StaticResource Card}">
+                <Border Style="{StaticResource Card}">
                     <StackPanel Spacing="18">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -255,7 +255,7 @@
                             <TextBlock
                                 VerticalAlignment="Center"
                                 Style="{StaticResource Caption}"
-                                Text="{Binding DpiStatus}" />
+                                Text="{Binding DpiDisplayStatus}" />
                             <Button
                                 Grid.Column="1"
                                 Click="ApplyDpi_Click"
@@ -298,7 +298,7 @@
                         <TextBlock Style="{StaticResource Caption}" Text="{Binding RateStatus}" />
                     </StackPanel>
                 </Border>
-                <Border x:Name="SensorCard" Style="{StaticResource Card}">
+                <Border Style="{StaticResource Card}">
                     <StackPanel Spacing="18">
                         <TextBlock Style="{StaticResource SectionTitle}" Text="传感器与响应" />
                         <TextBlock

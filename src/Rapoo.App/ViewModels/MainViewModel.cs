@@ -82,7 +82,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public string CurrentPollingRate => currentPollingRate is int rate ? $"{rate:N0} Hz" : "—";
     public string PollingRateDetail => !Connected ? "等待设备连接" : currentPollingRate is null ?
         "未能读取，重新连接可重试" : "设备配置读回值 · 不持续轮询";
-    public string DpiStatus { get => dpiStatus; private set => Set(ref dpiStatus, value); }
+    public string DpiStatus { get => dpiStatus; private set { if (Set(ref dpiStatus, value)) Notify(nameof(DpiDisplayStatus)); } }
+    public string DpiDisplayStatus => hasDeviceConfiguration ? ValidationError ?? DpiStatus : DpiStatus;
     public string RateStatus { get => rateStatus; private set => Set(ref rateStatus, value); }
     public string Message { get => message; private set => Set(ref message, value); }
     public InfoBarSeverity Severity { get => severity; private set => Set(ref severity, value); }
@@ -252,7 +253,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         RefreshAdvanced();
         foreach (var property in new[] { nameof(CanConnect), nameof(CanEdit), nameof(CanApplyDpi), nameof(CanApplyRate),
-            nameof(ConnectionText), nameof(ConnectionDetail), nameof(ConnectLabel), nameof(EnabledCount), nameof(RateHint),
+            nameof(ConnectionText), nameof(ConnectionDetail), nameof(ConnectLabel), nameof(EnabledCount), nameof(DpiDisplayStatus), nameof(RateHint),
             nameof(PollingRateDetail) }) Notify(property);
         NotifyBatteryState();
     }
