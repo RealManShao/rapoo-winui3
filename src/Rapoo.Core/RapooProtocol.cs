@@ -105,7 +105,7 @@ public static partial class RapooProtocol
         hertz = 0;
         if (!response.IsEmpty && response[0] == ConfigurationReportId) response = response[1..];
         if (response.Length < 8 || response[0] != 1 || response[1] != 0 || response[2] != 0 || response[3] != 0 ||
-            response[5] != 1 || response[6] != 1 || response[7] != 0xFF) return false;
+            response[5] > 1 || response[6] != 1 || response[7] != 0xFF) return false;
         hertz = response[4] switch
         {
             0x08 => 125, 0x04 => 250, 0x02 => 500, 0x01 => 1000,

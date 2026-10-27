@@ -7,12 +7,6 @@ public static partial class RapooProtocol
     public static IReadOnlyList<int> DebounceOptions { get; } = Array.AsReadOnly(new[] { 1, 2, 4, 8, 16, 24, 32 });
     public static IReadOnlyList<LodOption> LodOptions { get; } = Array.AsReadOnly(new[]
         { new LodOption(1, "0.7 mm"), new LodOption(2, "1 mm"), new LodOption(3, "2 mm") });
-    public static IReadOnlyList<DiyActionOption> DiyActions { get; } = Array.AsReadOnly(new[]
-    {
-        new DiyActionOption(DiyAction.Disabled, "禁用"), new(DiyAction.MiddleClick, "中键"),
-        new(DiyAction.KeyboardA, "键盘 A"), new(DiyAction.CyclePollingRate, "回报率切换")
-    });
-
     private static bool ValidDpi(int dpi) => dpi >= MinDpi && dpi <= MaxDpi && dpi % DpiStep == 0;
 
     // Responses carry no register address. Call only inside the matching explicit read transaction.
@@ -87,29 +81,6 @@ public static partial class RapooProtocol
         c4[1] = (byte)(settings.GlassTracking ? 1 : 0);
         return [RegisterWrite(0x08, 0xC0, c0), CreateRegisterQuery(0x08, 0xC4, 4),
             RegisterWrite(0x08, 0xC4, c4), CreateRegisterQuery(0x08, 0x84, 4), RegisterWrite(0x08, 0x84, b84), Commit()];
-    }
-
-    public static byte[] DiyActionBytes(DiyAction action) => action switch
-    {
-        DiyAction.Disabled => [7, 0, 0, 0],
-        DiyAction.MiddleClick => [3, 0, 4, 0],
-        DiyAction.KeyboardA => [0, 0, 4, 0],
-        DiyAction.CyclePollingRate => [10, 0, 0, 0],
-        _ => throw new ArgumentOutOfRangeException(nameof(action))
-    };
-
-    public static DiyAction? DecodeDiyAction(ReadOnlySpan<byte> bytes)
-    {
-        foreach (var option in DiyActions)
-            if (bytes.SequenceEqual(DiyActionBytes(option.Action))) return option.Action;
-        return null;
-    }
-
-    public static IReadOnlyList<byte[]> CreateDiyTransaction(DiyAction action)
-    {
-        var write = RegisterWrite(6, 0x34, DiyActionBytes(action));
-        return action is DiyAction.MiddleClick or DiyAction.CyclePollingRate
-            ? [write, (byte[])write.Clone(), Commit()] : [write, Commit()];
     }
 
     private static byte[] RegisterWrite(byte bank, byte address, byte[] data)

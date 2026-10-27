@@ -15,6 +15,4 @@ public sealed class SensorConfiguration(SensorSettings settings, byte[] block84,
     public byte[] BlockC4 => (byte[])originalC4.Clone();
 }
 
-public enum DiyAction { Disabled, MiddleClick, KeyboardA, CyclePollingRate }
-public sealed record DiyActionOption(DiyAction Action, string Label);
 public sealed record LodOption(int Code, string Label);

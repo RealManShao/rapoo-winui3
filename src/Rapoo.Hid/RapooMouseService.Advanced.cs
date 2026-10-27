@@ -116,30 +116,4 @@ public sealed partial class RapooMouseService
         }, token);
     }
 
-    private async Task<byte[]> ReadDiyCoreAsync(CancellationToken token)
-    {
-        // The captured 24-byte read at 0630 contains DIY's four bytes at offset 4.
-        var block = await ReadBlockCoreAsync(6, 0x30, 24, token,
-            d => d.AsSpan(0, 4).SequenceEqual(new byte[] { 255, 255, 255, 255 }) &&
-                !d.AsSpan(4, 4).SequenceEqual(new byte[] { 255, 255, 255, 255 }));
-        return block.AsSpan(4, 4).ToArray();
-    }
-
-    public async Task<byte[]?> ReadDiyActionAsync(CancellationToken token = default)
-    {
-        try { return await WithDeviceAsync(() => ReadDiyCoreAsync(token), token); }
-        catch (Exception ex) when (ex is not OperationCanceledException and not ObjectDisposedException)
-        { Log?.Invoke($"DIY 按键读取失败：{ex.Message}"); return null; }
-    }
-
-    public Task<byte[]> SetDiyActionAsync(DiyAction action, CancellationToken token = default)
-    {
-        var reports = RapooProtocol.CreateDiyTransaction(action);
-        return WithDeviceAsync(async () =>
-        {
-            await ReadDiyCoreAsync(token); // Refuse writes if current device configuration cannot be read.
-            await WriteReportsCoreAsync(reports, token);
-            return await ReadDiyCoreAsync(token);
-        }, token);
-    }
 }

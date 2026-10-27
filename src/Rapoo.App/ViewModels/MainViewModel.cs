@@ -120,8 +120,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             DpiStatus = configuration is null ? "设备配置读取失败" : "已读取鼠标 DPI 档位配置";
             Show(configuration is null ? "已连接，但配置读取失败，请重新连接重试。" :
                 "已读取鼠标实际配置。修改后点击应用才写入设备；电量与当前 DPI 来自鼠标报告。",
-                configuration is null || !sensorLoaded || !diyLoaded ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
-            if (configuration is not null && (!sensorLoaded || !diyLoaded))
+                configuration is null || !sensorLoaded ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
+            if (configuration is not null && (!sensorLoaded))
                 Show("已连接，部分设置读取失败；对应编辑区已禁用，请唤醒鼠标后重新连接。", InfoBarSeverity.Warning);
         }
         catch (Exception ex) { if (!closing) { Show(ex.Message, InfoBarSeverity.Warning); AddLog(ex.ToString()); } }

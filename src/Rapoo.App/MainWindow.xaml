@@ -51,7 +51,6 @@
                             <StackPanel Spacing="6">
                                 <Button Content="DPI 与回报率" HorizontalAlignment="Stretch" Click="DpiSection_Click" />
                                 <Button Content="传感器与响应" HorizontalAlignment="Stretch" Click="SensorSection_Click" />
-                                <Button Content="DIY 按键" HorizontalAlignment="Stretch" Click="DiySection_Click" />
                             </StackPanel>
                         </StackPanel>
 
@@ -424,88 +423,6 @@
                             Content="清空界面日志" />
                     </StackPanel>
                 </Expander>
-            </StackPanel>
-        </ScrollViewer>
-        <ScrollViewer
-            x:Name="DiyPage"
-            Grid.Column="1"
-            HorizontalScrollBarVisibility="Disabled"
-            VerticalScrollBarVisibility="Auto"
-            Visibility="Collapsed">
-            <StackPanel
-                MaxWidth="900"
-                Padding="32,28,32,32"
-                HorizontalAlignment="Stretch"
-                Spacing="20">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center" Spacing="4">
-                        <TextBlock
-                            FontSize="30"
-                            FontWeight="SemiBold"
-                            Text="按键设置" />
-                        <TextBlock Style="{StaticResource Caption}" Text="配置底部 DIY 按键的动作。" />
-                    </StackPanel>
-                    <StackPanel
-                        Grid.Column="1"
-                        VerticalAlignment="Center"
-                        Orientation="Horizontal"
-                        Spacing="12">
-                        <ProgressRing
-                            Width="22"
-                            Height="22"
-                            IsActive="{Binding Busy}" />
-                        <Button
-                            Click="Connect_Click"
-                            Content="{Binding ConnectLabel}"
-                            IsEnabled="{Binding CanConnect}" />
-                    </StackPanel>
-                </Grid>
-                <InfoBar
-                    IsClosable="False"
-                    IsOpen="True"
-                    Message="{Binding Message}"
-                    Severity="{Binding Severity}" />
-                <Border Style="{StaticResource Card}">
-                    <StackPanel Spacing="18">
-                        <TextBlock Style="{StaticResource SectionTitle}" Text="底部 DIY 按键" />
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Style="{StaticResource Caption}" Text="当前动作：" />
-                            <TextBlock FontWeight="SemiBold" Text="{Binding CurrentDiyAction}" />
-                        </StackPanel>
-                        <TextBlock
-                            Style="{StaticResource Caption}"
-                            Text="选择底部 DIY 键的动作，应用后设备会读回确认。"
-                            TextWrapping="Wrap" />
-                        <Grid ColumnSpacing="20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <ComboBox
-                                HorizontalAlignment="Stretch"
-                                AutomationProperties.Name="DIY 按键动作"
-                                DisplayMemberPath="Label"
-                                IsEnabled="{Binding CanEditDiy}"
-                                ItemsSource="{Binding DiyActions}"
-                                PlaceholderText="请选择动作"
-                                SelectedItem="{Binding SelectedDiyAction, Mode=TwoWay}" />
-                            <Button
-                                Grid.Column="1"
-                                Click="ApplyDiy_Click"
-                                Content="应用按键"
-                                IsEnabled="{Binding CanApplyDiy}"
-                                Style="{StaticResource AccentButtonStyle}" />
-                        </Grid>
-                        <TextBlock
-                            Style="{StaticResource Caption}"
-                            Text="{Binding DiyStatus}"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Border>
             </StackPanel>
         </ScrollViewer>
     </Grid>

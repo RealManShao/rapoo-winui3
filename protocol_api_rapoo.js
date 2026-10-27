@@ -1790,7 +1790,6 @@
     // DPI 功能（示例）
     add("DPI循环", "mouse", 0x08, 0x0003);
     add("DPI循环-", "mouse", 0x08, 0x0004);
-    add("DIY按键", "mouse", 0x0a, 0x0000);
     // 键盘 A-Z（示例）
     for (let i = 0; i < 26; i++) add(String.fromCharCode(65 + i), "keyboard", 0x00, 0x04 + i);
 

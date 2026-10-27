@@ -17,19 +17,12 @@ if (args.Contains("--device"))
     var sensors = await mouse.ReadSensorConfigurationAsync();
     if (sensors is null) throw new InvalidOperationException("Sensor read failed.");
     Console.WriteLine($"Sensors: {sensors.Settings}");
-    var diy = await mouse.ReadDiyActionAsync();
-    if (diy is null) throw new InvalidOperationException("DIY read failed.");
-    Console.WriteLine($"DIY: {Convert.ToHexString(diy)} ({RapooProtocol.DecodeDiyAction(diy)?.ToString() ?? "other"})");
     if (args.Contains("--verify-writes"))
     {
         // Reapply only values just read, then compare. Never substitute default configuration.
         var actualSensors = await mouse.SetSensorSettingsAsync(sensors.Settings);
         if (actualSensors.Settings != sensors.Settings) throw new InvalidOperationException("Sensor write/readback mismatch.");
         Console.WriteLine("PASS: unchanged sensor settings written, committed and read back.");
-        var action = RapooProtocol.DecodeDiyAction(diy) ?? throw new InvalidOperationException("Refusing to rewrite an unknown DIY action.");
-        var actualDiy = await mouse.SetDiyActionAsync(action);
-        if (!actualDiy.SequenceEqual(diy)) throw new InvalidOperationException("DIY write/readback mismatch.");
-        Console.WriteLine("PASS: unchanged DIY action written, committed and read back.");
         await mouse.SetDpiAsync(configuration.Stages);
         var actualDpi = await mouse.ReadDeviceConfigurationAsync();
         if (actualDpi is null || actualDpi.PollingRate != configuration.PollingRate || !actualDpi.Stages.SequenceEqual(configuration.Stages))
@@ -99,6 +92,13 @@ Check(Convert.ToHexString(RapooProtocol.CreatePollingRateQuery()) ==
     "BAA5A40480080000000000000000000000000000000000000000000000000000",
     "Read request must match the captured four-byte read at 0x0880.");
 var fullResponse = Convert.FromHexString("01000000040101FF020001002003AA059001B004800C0019C8AF0600");
+var reportedResponse = Convert.FromHexString("01000000010001FF03000100200340069001B004800C0019C8AF010000000000");
+Check(RapooProtocol.TryParseDeviceConfigurationResponse(reportedResponse, out var reportedConfiguration) &&
+    reportedConfiguration!.PollingRate == 1000 && reportedConfiguration.Stages.Count(s => s.Enabled) == 2 &&
+    reportedConfiguration.Stages.Select(s => s.Dpi).SequenceEqual(new[] { 800, 1600, 400, 1200, 3200, 6400, 45000 }),
+    "Accept the observed zero auxiliary byte and decode the reported DPI configuration.");
+reportedResponse[5] = 2;
+Check(!RapooProtocol.TryParseDeviceConfigurationResponse(reportedResponse, out _), "Reject unsupported auxiliary values.");
 Check(RapooProtocol.TryParseDeviceConfigurationResponse(fullResponse, out var configurationRead) &&
     configurationRead!.PollingRate == 250 && configurationRead.Stages.All(s => s.Enabled) &&
     configurationRead.Stages.Select(s => s.Dpi).SequenceEqual(new[] { 800, 1450, 400, 1200, 3200, 6400, 45000 }),
@@ -159,13 +159,4 @@ Check(RapooProtocol.TryParseDpiYResponse(yResponse, out var yParsed) && yParsed[
     "Decode seven Y stages including enable count.");
 yResponse[4] = 0;
 Check(!RapooProtocol.TryParseDpiYResponse(yResponse, out _), "Reject invalid Y DPI instead of guessing linked values.");
-foreach (var (action, expected) in new[] { (DiyAction.Disabled, "07000000"), (DiyAction.MiddleClick, "03000400"),
-    (DiyAction.KeyboardA, "00000400"), (DiyAction.CyclePollingRate, "0A000000") })
-{
-    var transaction = RapooProtocol.CreateDiyTransaction(action);
-    Check(Convert.ToHexString(transaction[0].AsSpan(8, 4)) == expected && transaction[0][4] == 0x34 && transaction[0][5] == 6,
-        "DIY writes must match the verified physical button and action encoding.");
-    Check(RapooProtocol.DecodeDiyAction(Convert.FromHexString(expected)) == action, "Readback action match.");
-}
-Check(RapooProtocol.DecodeDiyAction(Convert.FromHexString("FFFFFFFF")) is null, "Unknown mappings must remain unknown.");
-Console.WriteLine("PASS: captured sensor encodings, reserved fields, independent X/Y packing, invalid inputs and verified DIY actions.");
+Console.WriteLine("PASS: captured sensor encodings, reserved fields, independent X/Y packing and invalid inputs.");
